@@ -1,8 +1,17 @@
 import socket
 import picar_4wd as fc
 import threading
+import subprocess
 
-HOST = "192.168.0.14" # IP address of your Raspberry PI
+def get_local_ip_address():
+    try:
+        ip_address = subprocess.check_output(["hostname", "-I"]).decode("utf-8").split()[0]
+        return ip_address
+    except subprocess.CalledProcessError:
+        print("Error retrieving IP address.")
+        return None
+    
+HOST = get_local_ip_address() or "192.168.0.15" # IP address of your Raspberry PI
 PORT = 65432          # Port to listen on (non-privileged ports are > 1023)
 POWER = 10            # Power of motors
 
