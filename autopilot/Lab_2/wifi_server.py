@@ -4,6 +4,7 @@ import threading
 import time
 import json
 import subprocess
+from video_feed import start_video_feed
 
 
 def get_local_ip_address():
@@ -19,7 +20,14 @@ HOST = get_local_ip_address() or "192.168.0.14"  # IP address of your Raspberry 
 PORT = 65432           # Port to listen on (non-privileged ports are > 1023)
 POWER = 10             # Power of motors
 
+# ------------------------------- flask server for video feed ---------------------------------
 
+# start flask app in separate thread for video feed
+video_feed_thread = threading.Thread(target=start_video_feed)
+video_feed_thread.start()
+
+
+# ---------------------------------------- socket server ---------------------------------------
 def get_metrics():
     metrics = {
         'battery': fc.power_read(),
@@ -77,7 +85,7 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
     s.bind((HOST, PORT))
     s.listen()
     print(f"Server listening on {HOST}:{PORT}")
-    fc.start_speed_thread()  # start separate thread to calculate vehicle speed
+    fc.start_speed_thread()  # separate thread to calculate vehicle speed
     try:
         while True:
             client, client_info = s.accept()
@@ -91,24 +99,3 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
         print(f"Exception: {e}")
     finally:
         s.close()
-
-
-############## unused #################
-#
-# with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-#     s.bind((HOST, PORT))
-#     s.listen()
-#     client, clientInfo = s.accept()
-#     try:
-#         while 1:
-#             client, clientInfo = s.accept()
-#             print("server recv from: ", clientInfo)
-#             data = client.recv(1024)      # receive 1024 Bytes of message in binary format
-#             if data != b"":
-#                 # match action
-#                 print(data)
-#                 client.sendall(data) # Echo back to client
-#     except:
-#         print("Closing socket")
-#         client.close()
-#         s.close()
